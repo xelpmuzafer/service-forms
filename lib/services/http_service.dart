@@ -16,7 +16,8 @@ class HttpService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
 
-    final url = Uri.parse("http://192.168.2.66:5000/v1/api/question/all");
+    final url = Uri.parse(
+        "https://giant-shrimps-count-157-119-109-107.loca.lt/v1/api/question/all");
 
     final headers = {
       'Content-Type': 'application/json',
@@ -25,7 +26,6 @@ class HttpService {
 
     var response = await get(url, headers: headers);
     int statusCode = response.statusCode;
-
 
     if (response.statusCode == 200) {
       String responseBody = response.body;
@@ -49,7 +49,8 @@ class HttpService {
       return null;
     }
 
-    final _loginUrl = Uri.parse('http://192.168.2.66:5000/v1/api/auth/login');
+    final _loginUrl = Uri.parse(
+        'https://giant-shrimps-count-157-119-109-107.loca.lt/v1/api/auth/login');
 
     final headers = {'Content-Type': 'application/json'};
     Map<String, dynamic> body = {'email': id, 'password': password};
@@ -94,50 +95,34 @@ class HttpService {
     }
   }
 
-  static submitSurvey(context, String name, String ans1, String ans2,
-      audiofile1, audiofile2) async {
-    if (name == "") {
-      EasyLoading.showError("Please enter name");
-      return null;
-    } else if (audiofile1 == null) {
-      EasyLoading.showError("Please add agent's audio recording");
-      return null;
-    } else if (audiofile2 == null) {
-      EasyLoading.showError("Please add citizen's audio recording");
-      return null;
-    }
+  static submitSurvey(context, dynamic payload, filepaths) async {
+    const String baseUrl =
+        "https://giant-shrimps-count-157-119-109-107.loca.lt/v1/api/surveydata/upload";
 
-    const String baseUrl = "http://192.168.2.66:5000/v1/api/surveydata/upload";
-
-    var url = baseUrl;
+    print("-----------***********-----------------data---------------------");
+    print(baseUrl);
+    print(payload);
 
     MySharedPreferences.instance.getStringValue("email").then((id) async {
-      MultipartRequest request = MultipartRequest('POST', Uri.parse(url));
-
-      request.files.add(
-        await MultipartFile.fromPath(
-          'audio',
-          audiofile1,
-          contentType: MediaType('application', 'audio/m4a'),
-        ),
-      );
-      request.files.add(
-        await MultipartFile.fromPath(
-          'audio',
-          audiofile2,
-          contentType: MediaType('application', 'jpeg'),
-        ),
-      );
+      MultipartRequest request = MultipartRequest('POST', Uri.parse(baseUrl));
+      filepaths.forEach((k, v) async {
+        if (v != "") {
+          request.files.add(
+            await MultipartFile.fromPath(
+              'audio',
+              v,
+              contentType: MediaType('application', 'audio/m4a'),
+            ),
+          );
+        }
+      });
 
       print(request.files);
-
       _determinePosition().then((value) {
-        request.fields.addAll({
-          "name": name,
-          "question_one_answer": ans1,
-          "question_two_answer": ans2,
-          "location_coordinates": [value.latitude, value.longitude].toString()
-        });
+        payload["location_coordinates"] =
+            [value.latitude, value.longitude].toString();
+
+        request.fields.addAll(payload);
 
         MySharedPreferences.instance
             .getStringValue("token")
@@ -148,6 +133,8 @@ class HttpService {
           StreamedResponse r = await request.send();
 
           print(r);
+
+          print(r.statusCode);
 
           if (r.statusCode == 200) {
             await EasyLoading.showSuccess("Submitted successfully");

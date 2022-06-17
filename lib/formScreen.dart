@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:group_radio_button/group_radio_button.dart';
@@ -46,6 +48,10 @@ class _FormScreenState extends State<FormScreen> {
 
   var questions = [];
 
+  var question_names = {};
+
+  var alias = {};
+
   bool showPlayer = false;
 
   bool showPlayer2 = false;
@@ -57,21 +63,21 @@ class _FormScreenState extends State<FormScreen> {
   var loading = false;
 
   var userResponse = {};
-  var payload = {};
+  Map<String, String> payloadData = {};
 
   preparePayload() {
     userResponse.forEach((k, v) {
       if (v != "") {
         for (var item in questions) {
           if (item['id'] == k) {
-            payload[item['alias']] = v;
+            payloadData[item['alias']] = v;
           }
         }
       }
     });
 
-    print("------------------Prepared payload-------");
-    print(payload);
+    print("------------------Prepared payloadData-------");
+    print(payloadData);
   }
 
   saveReponse(dynamic ques, dynamic ans) {
@@ -82,37 +88,31 @@ class _FormScreenState extends State<FormScreen> {
   getWidget(ques) {
     switch (ques['answer_type']) {
       case "text":
-        return TextField(
+        return Container(
+            child: TextField(
           onChanged: (value) {
             saveReponse(ques, value);
           },
-          decoration: new InputDecoration(
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(),
-            ),
-            hintText: ques['question'],
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Enter ${ques['question']}',
           ),
-        );
+          autofocus: false,
+        ));
 
       case "number":
-        return TextField(
-          onChanged: (value) {
-            saveReponse(ques, value);
-            print(userResponse);
-          },
-          decoration: new InputDecoration(
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(),
+        return Container(
+          child: TextField(
+            onChanged: (value) {
+              saveReponse(ques, value);
+            },
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Enter ${ques['question']}',
             ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(),
-            ),
-            hintText: ques['question'],
+            autofocus: false,
+            keyboardType: TextInputType.number,
           ),
-          keyboardType: TextInputType.number,
         );
 
       case "multiple choice":
@@ -142,7 +142,7 @@ class _FormScreenState extends State<FormScreen> {
                       setState(() {
                         showPlayers[ques["id"]] = false;
                         filePaths[ques["id"]] = "";
-                        payload[ques['alias']] = "";
+                        payloadData[ques['alias']] = "";
                       });
                     },
                   ),
@@ -159,9 +159,9 @@ class _FormScreenState extends State<FormScreen> {
                           ap.AudioSource.uri(Uri.parse(path));
                       showPlayers[ques["id"]] = true;
                       filePaths[ques["id"]] = path;
-                      payload[ques['alias']] = path;
+                      payloadData[ques['alias']] = path;
 
-                      print(payload);
+                      print(payloadData);
                     });
                     setState(() {
                       showPlayers[ques["id"]] = true;
@@ -182,6 +182,8 @@ class _FormScreenState extends State<FormScreen> {
       questions = data['questions'];
 
       for (var item in questions) {
+        alias[item['id']] = item['alias'];
+        question_names[item['id']] = item['question'];
         print("-----------------");
         print(item);
         if (item['answer_type'] == 'multiple choice') {
@@ -199,6 +201,9 @@ class _FormScreenState extends State<FormScreen> {
           userResponse[item['id']] = "";
         }
       }
+
+      print("===========AUDIO SOURCES=============");
+      print(audioSources);
     });
 
     setState(() {
@@ -251,57 +256,115 @@ class _FormScreenState extends State<FormScreen> {
           child: drawerItems,
         ),
         appBar: AppBar(
-          title: Text("Survey"),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                  onPressed: () {
-                    logout(context);
-                  },
-                  icon: Icon(Icons.logout)),
-            )
-          ],
+          title: Text(
+            "Survey",
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+          ),
+          backgroundColor: Color.fromARGB(255, 39, 110, 176),
+          centerTitle: true,
+          elevation: 0,
         ),
-        body: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Card(
-                elevation: 4,
-                child: is_loaded == false
-                    ? Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.85,
-                        child: Container(
-                          padding: EdgeInsets.all(20),
-                          child: ListView.builder(
-                              itemCount: questions.length,
-                              itemBuilder: (context, index) {
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 20),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        questions[index]['question'],
-                                        style: lableStyle,
+        body: Container(
+          color: Color.fromARGB(255, 39, 110, 176),
+          child: Column(
+            children: [
+              //body
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 20,
+                  ),
+                  decoration: BoxDecoration(
+                      // ignore: prefer_const_literals_to_create_immutables
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(5, 5),
+                          blurRadius: 10,
+                          color: Color.fromARGB(185, 0, 0, 0),
+                        )
+                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(50),
+                          topRight: Radius.circular(50))),
+                  child: is_loaded == false
+                      ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ListView.builder(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 20, horizontal: 20),
+                                  itemCount: questions.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 20),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              "${index + 1}. ${questions[index]['question']}",
+                                              style: lableStyle,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                                child: getWidget(
+                                                    questions[index])),
+                                          )
+                                        ],
                                       ),
-                                      Container(
-                                          child: getWidget(questions[index]))
-                                    ],
-                                  ),
-                                );
-                              }),
+                                    );
+                                  }),
+                            ),
+                            //button
+
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 30),
+                              child: loading == true
+                                  ? const Center(
+                                      child: CircularProgressIndicator())
+                                  : CustomButton(
+                                      onclickFunction: () {
+                                        bool err = false;
+                                        filePaths.forEach((key, value) {
+                                          if (value == "") {
+                                            err = true;
+                                            EasyLoading.showError(
+                                                'Please add:  "${question_names[key]}"');
+
+                                            return alias[key];
+                                          }
+                                        });
+
+                                        if (!err) {
+                                          setState(() {
+                                            loading = true;
+                                          });
+                                          var response =
+                                              HttpService.submitSurvey(context,
+                                                  payloadData, filePaths);
+                                        }
+                                      },
+                                      text: "Submit"),
+                            ),
+                          ],
                         ),
-                      ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
