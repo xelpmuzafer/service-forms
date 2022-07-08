@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: FormStepper(),
+      home: MyHomePage(),
       builder: EasyLoading.init(),
     );
   }
@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   dynamic data = [];
 
-Future<List<dynamic>> getRequest() async {
+Future<dynamic> getRequest() async {
     //replace your restFull API here.
     String url = "http://49.50.74.106:3001/services/data/getAllServices";
     final response = await http.get(Uri.parse(url));
@@ -52,6 +52,7 @@ Future<List<dynamic>> getRequest() async {
     
     setState(() {
       data = responseData['data'];
+      print(data);
     });
     return responseData;
   }
@@ -71,6 +72,10 @@ Future<List<dynamic>> getRequest() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Service Forms")),
-      body: Container(child: FormStepper(id: "test"),));
+      body: Container(child: ListView.builder(
+        itemCount:  data.length,        
+        itemBuilder: ((context, index) {
+        return ListTile(title:  data[index]['name '],);
+      })),));
   }
 }
