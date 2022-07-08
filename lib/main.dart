@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:surveynow/formScreen.dart';
-import 'package:surveynow/login.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:surveynow/services/my_shared_preferrences.dart';
+import 'package:http/http.dart' as http;
+import 'package:surveynow/stepper_form.dart';
 
 void main() {
   
@@ -22,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: FormStepper(),
       builder: EasyLoading.init(),
     );
   }
@@ -36,24 +39,38 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  dynamic data = [];
+
+Future<List<dynamic>> getRequest() async {
+    //replace your restFull API here.
+    String url = "http://49.50.74.106:3001/services/data/getAllServices";
+    final response = await http.get(Uri.parse(url));
+  
+    var responseData = json.decode(response.body);
+  
+    
+    setState(() {
+      data = responseData['data'];
+    });
+    return responseData;
+  }
+
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
-    MySharedPreferences.instance.getStringValue("logged_in").then((value) {
-      if (value == "true") {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => FormScreen()));
-      } else {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => Login()));
+       getRequest();
       }
-    });
-  }
+    
+  
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: CircularProgressIndicator()));
+    return Scaffold(
+      appBar: AppBar(title: Text("Service Forms")),
+      body: Container(child: FormStepper(id: "test"),));
   }
 }

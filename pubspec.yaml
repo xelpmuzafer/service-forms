@@ -42,6 +42,15 @@ dependencies:
   flutter_easyloading: ^3.0.5
   location: ^4.4.0
   geolocator: ^8.2.1
+  flutter_dropdown: ^1.0.1+hotfix.1
+  status_change: ^2.0.0
+  linear_step_indicator: ^1.0.0+3
+  im_stepper: ^1.0.1+1
+  flutter_svg: ^1.1.1+1
+  flutter_bloc: ^8.0.1
+  intl: ^0.17.0
+  shimmer: ^2.0.0
+  fluttertoast: ^8.0.9
 
 dev_dependencies:
   flutter_test:

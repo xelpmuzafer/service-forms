@@ -1,372 +1,452 @@
-// ignore_for_file: prefer_const_constructors
+// // ignore_for_file: prefer_const_constructors
 
-import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:group_radio_button/group_radio_button.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import 'package:group_radio_button/group_radio_button.dart';
+// import 'package:flutter_dropdown/flutter_dropdown.dart';
+// import 'package:just_audio/just_audio.dart' as ap;
+// import 'package:audioplayers/audioplayers.dart' as Aps;
+// import 'package:surveynow/appStyles.dart';
+// import 'package:surveynow/main.dart';
+// import 'package:surveynow/services/http_service.dart';
+// import 'package:surveynow/services/my_shared_preferrences.dart';
+// import 'package:surveynow/widgets/custom_button.dart';
+// import 'package:surveynow/widgets/custom_input.dart';
+// import 'package:status_change/status_change.dart';
+// import 'widgets/audioPlayer.dart';
+// import 'widgets/audioRecorder.dart';
 
-import 'package:just_audio/just_audio.dart' as ap;
-import 'package:audioplayers/audioplayers.dart' as Aps;
-import 'package:surveynow/appStyles.dart';
-import 'package:surveynow/login.dart';
-import 'package:surveynow/main.dart';
-import 'package:surveynow/services/http_service.dart';
-import 'package:surveynow/services/my_shared_preferrences.dart';
-import 'package:surveynow/widgets/custom_button.dart';
-import 'package:surveynow/widgets/custom_input.dart';
+// void logout(context) {
+//   MySharedPreferences.instance.setStringValue("logged_in", "");
 
-import 'widgets/audioPlayer.dart';
-import 'widgets/audioRecorder.dart';
+//   MySharedPreferences.instance.setStringValue("token", "");
 
-void logout(context) {
-  MySharedPreferences.instance.setStringValue("logged_in", "");
+//   Navigator.push(
+//       context, MaterialPageRoute(builder: (context) => MyHomePage()));
+// }
 
-  MySharedPreferences.instance.setStringValue("token", "");
+// class FormScreen extends StatefulWidget {
+//   final id;
+//   const FormScreen({Key? key, this.id}) : super(key: key);
 
-  Navigator.push(
-      context, MaterialPageRoute(builder: (context) => MyHomePage()));
-}
+//   @override
+//   _FormScreenState createState() => _FormScreenState();
+// }
 
-class FormScreen extends StatefulWidget {
-  const FormScreen({Key? key}) : super(key: key);
+// class _FormScreenState extends State<FormScreen> {
+//   ap.AudioSource? audioSource;
 
-  @override
-  _FormScreenState createState() => _FormScreenState();
-}
+//   List<Object> child_options = [];
 
-class _FormScreenState extends State<FormScreen> {
-  ap.AudioSource? audioSource;
+//   var questions = [];
 
-  var filepath;
+//   var question_names = {};
 
-  var audioSources = {};
+//   var alias = {};
 
-  var filePaths = {};
+//   bool is_loaded = false;
 
-  var showPlayers = {};
+//   TextEditingController nameController = TextEditingController();
 
-  bool is_loaded = false;
+//   var email;
 
-  var questions = [];
+//   var loading = false;
 
-  var question_names = {};
+//   var userResponse = {};
+//   Map<String, dynamic> payloadData = {};
 
-  var alias = {};
+//   preparePayload() {
+//     userResponse.forEach((k, v) {
+//       if (v != "") {
+//         for (var item in questions) {
+//           if (item['name'] == k) {
+//             payloadData[item['name']] = v;
+//           }
+//         }
+//       }
+//     });
 
-  bool showPlayer = false;
+//     print("------------------Prepared payloadData-------");
+//     print(payloadData);
+//     print(userResponse);
+//   }
 
-  bool showPlayer2 = false;
+//   saveReponse(dynamic ques, dynamic ans) {
+//     userResponse[ques['name']] = ans;
+//     preparePayload();
+//   }
 
-  TextEditingController nameController = TextEditingController();
+//   getWidget(ques) {
+//     switch (ques['type']) {
+//       case "heading":
+//         return Center(
+//             child: Text(
+//           ques['name'],
+//           style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(230, 26, 24, 24), fontSize: 18),
+//         ));
+//       case "subheading":
+//         return Container(
+//             child: Text(
+//           ques['name'],
+//           style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
+//         ));
 
-  var email;
+//       case "p":
+//         return Container(
+//             child: Text(
+//           ques['name'],
+//           style: TextStyle(fontWeight: FontWeight.w400),
+//         ));
+//       case "text":
+//         return Container(
+//             child: TextField(
+//           onChanged: (value) {
+//             saveReponse(ques, value);
+//           },
+//           decoration:  InputDecoration(
+//             border: OutlineInputBorder(),
+//             labelText: '${ques['name']}',
+//             hintText: 'Enter ${ques['name']}',
+//           ),
+//           autofocus: false,
+//         ));
 
-  var loading = false;
+//       case "number":
+//         return Container(
+//           child: TextField(
+//             onChanged: (value) {
+//               saveReponse(ques, value);
+//             },
+//             decoration: InputDecoration(
+//               border: OutlineInputBorder(),
+//               hintText: 'Enter ${ques['question']}',
+//             ),
+//             autofocus: false,
+//             keyboardType: TextInputType.number,
+//           ),
+//         );
 
-  var userResponse = {};
-  Map<String, String> payloadData = {};
+//       case "dropdown":
+//         return ques['options'] == null? null : Column(
+//           mainAxisAlignment: MainAxisAlignment.start,
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(ques['name']),
+//             DropDown(
+//                 isExpanded: true,
+//                 items: ques['options'],
+//                 hint: Text(ques['options'].length > 0 ? ques['options'][0].toString() : ""),
+//                 icon: Icon(
+//                   Icons.expand_more,
+//                   color: Colors.blue,
+//                 ),
+//                 onChanged: (newValue) {
+//                   setState(() {
+//                     userResponse[ques['name']] = newValue!;
+//                     saveReponse(ques, newValue);
+//                   });
+//                 }),
+//           ],
+//         );
 
-  preparePayload() {
-    userResponse.forEach((k, v) {
-      if (v != "") {
-        for (var item in questions) {
-          if (item['id'] == k) {
-            payloadData[item['alias']] = v;
-          }
-        }
-      }
-    });
+//       case "sub-dropdown-options1":
+//         return RadioGroup<String>.builder(
+//           groupValue: userResponse[ques['id']],
+//           onChanged: (value) => setState(() {
+//             saveReponse(ques, value.toString());
+//           }),
+//           items: ques['options'],
+//           itemBuilder: (item) => RadioButtonBuilder(
+//             item,
+//           ),
+//         );
 
-    print("------------------Prepared payloadData-------");
-    print(payloadData);
-  }
+//       case "sub-dropdown-value":
+//         return child_options.length == 0 ? null : Column(
 
-  saveReponse(dynamic ques, dynamic ans) {
-    userResponse[ques['id']] = ans;
-    preparePayload();
-  }
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(ques['name']),
+//             DropDown(
+//                 isExpanded: true,
+//                 items: child_options,
+//                 hint: Text(userResponse[ques['name']]),
+//                 icon: Icon(
+//                   Icons.expand_more,
+//                   color: Colors.blue,
+//                 ),
+//                 onChanged: (newValue) {
+//                   setState(() {
+//                     userResponse[ques['name']] = newValue!;
+//                     saveReponse(ques, newValue);
+//                   });
+//                 }),
+//           ],
+//         );
 
-  getWidget(ques) {
-    switch (ques['answer_type']) {
-      case "text":
-        return Container(
-            child: TextField(
-          onChanged: (value) {
-            saveReponse(ques, value);
-          },
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'Enter ${ques['question']}',
-          ),
-          autofocus: false,
-        ));
+//       case "sub-dropdown-parent":
+//         userResponse[ques['name']] = ques['options'][0];
 
-      case "number":
-        return Container(
-          child: TextField(
-            onChanged: (value) {
-              saveReponse(ques, value);
-            },
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Enter ${ques['question']}',
-            ),
-            autofocus: false,
-            keyboardType: TextInputType.number,
-          ),
-        );
 
-      case "multiple choice":
-        return RadioGroup<String>.builder(
-          groupValue: userResponse[ques['id']],
-          onChanged: (value) => setState(() {
-            saveReponse(ques, value.toString());
-          }),
-          items: [
-            ques['option_one'].toString(),
-            ques['option_two'].toString(),
-            ques['option_three'].toString()
-          ],
-          itemBuilder: (item) => RadioButtonBuilder(
-            item,
-          ),
-        );
+//         // for(var x in questions){
+//         //   if(x['type'] == 'subdropdown-options' && x['name'] == ques['options'][0]){
+//         //         setState(() {
+//         //           child_options = x['options'];
+//         //         });
+//         //   }
+//         // }
 
-      case "audio":
-        return Center(
-          child: showPlayers[ques["id"]]
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
-                  child: AudioPlayer(
-                    source: audioSources[ques["id"]],
-                    onDelete: () {
-                      setState(() {
-                        showPlayers[ques["id"]] = false;
-                        filePaths[ques["id"]] = "";
-                        payloadData[ques['alias']] = "";
-                      });
-                    },
-                  ),
-                )
-              : AudioRecorder(
-                  onStop: (path) {
-                    print("source ===============================");
-                    print(path);
-                    setState(() {
-                      filepath = path;
-                    });
-                    setState(() {
-                      audioSources[ques['id']] =
-                          ap.AudioSource.uri(Uri.parse(path));
-                      showPlayers[ques["id"]] = true;
-                      filePaths[ques["id"]] = path;
-                      payloadData[ques['alias']] = path;
+//         dynamic p_options = ques['options'];
 
-                      print(payloadData);
-                    });
-                    setState(() {
-                      showPlayers[ques["id"]] = true;
-                    });
-                  },
-                ),
-        );
-    }
-  }
+//         p_options.insert(0, "");
 
-  fetchData() async {
-    print("called");
-    var data = await HttpService().getQuestion();
 
-    print(data['questions'][0]);
 
-    setState(() {
-      questions = data['questions'];
+//         return Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           mainAxisAlignment: MainAxisAlignment.start,
+//           children: [
+//             Text(
+//               ques['name'],
+//               style: TextStyle(fontWeight: FontWeight.w600),
+//             ),
+//             SizedBox(
+//               width: double.infinity,
+//               child: DropDown(
+//                   isExpanded: true,
+//                   items: p_options,
+//                   hint: Text(ques['options'][0]),
+//                   icon: Icon(
+//                     Icons.expand_more,
+//                     color: Colors.blue,
+//                   ),
+//                   onChanged: (newValue) {
+//                     setState(() {
+//                       userResponse[ques['name']] = newValue!;
+//                       child_options.clear();
+//                     });
 
-      for (var item in questions) {
-        alias[item['id']] = item['alias'];
-        question_names[item['id']] = item['question'];
-        print("-----------------");
-        print(item);
-        if (item['answer_type'] == 'multiple choice') {
-          userResponse[item['id']] = item['option_one'].toString();
-        } else if (item['answer_type'] == 'audio') {
-          ap.AudioSource? audioSource;
-          audioSources[item['id']] = audioSource;
+//                     print("----------------changed-----------------------");
 
-          filePaths[item['id']] = "";
+//                     late dynamic selected_parent_value;
+//                     for (var item in questions) {
+//                       if (item['type'] == "sub-dropdown-parent") {
+//                         selected_parent_value = userResponse[ques['name']];
+//                       }
+//                     }
 
-          showPlayers[item['id']] = false;
+//                     print(
+//                         "---------------------------------------------------USER SELECTED------------------");
+//                     print(selected_parent_value.toString());
+                    
+//                     for (var item in questions) {
+//                       if (item['type'] == "subdropdown-options" &&
+//                           item['name'] == selected_parent_value) {
+//                         print(item['type']);
+//                         print(item);
 
-          userResponse[item['id']] = "";
-        } else {
-          userResponse[item['id']] = "";
-        }
-      }
+//                         List<Object> temp = [];
 
-      print("===========AUDIO SOURCES=============");
-      print(audioSources);
-    });
 
-    setState(() {
-      is_loaded = true;
-    });
-  }
+//                         print(item['options'].runtimeType);
+//                         for (var x in item['options']) {
+//                           print(x);
+//                           temp.add(x.toString());
+//                         }
+//                         setState(() {
+//                           child_options = temp;
+//                         });
+//                       }
+//                     }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
+//                     print("============================OPTIONS==============");
 
-    print("=======================+APP started===================");
+//                     print(child_options);
+//                   }),
+//             ),
+//           ],
+//         );
+//     }
+//   }
 
-    fetchData();
+//   fetchData() async {
+//     print("called");
+//     var data = await HttpService().getForm(widget.id);
 
-    MySharedPreferences.instance.getStringValue("email").then((value) {
-      setState(() {
-        email = value;
-      });
-    });
-  }
+//     print(data);
 
-  @override
-  Widget build(BuildContext context) {
-    var drawerHeader = UserAccountsDrawerHeader(
-      accountEmail: Text(email.toString()),
-      currentAccountPicture: CircleAvatar(
-        backgroundColor: Colors.white,
-        child: FlutterLogo(size: 42.0),
-      ),
-      otherAccountsPictures: <Widget>[],
-      accountName: null,
-    );
+//     setState(() {
+//       questions = data['data'];
 
-    final drawerItems = ListView(
-      children: <Widget>[
-        drawerHeader,
-        ListTile(
-          title: const Text('Logout'),
-          onTap: () {
-            logout(context);
-          },
-        ),
-      ],
-    );
-    return SafeArea(
-      child: Scaffold(
-        drawer: Drawer(
-          child: drawerItems,
-        ),
-        appBar: AppBar(
-          title: Text(
-            "Survey",
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
-          ),
-          backgroundColor: Color.fromARGB(255, 39, 110, 176),
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: Container(
-          color: Color.fromARGB(255, 39, 110, 176),
-          child: Column(
-            children: [
-              //body
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 20,
-                  ),
-                  decoration: BoxDecoration(
-                      // ignore: prefer_const_literals_to_create_immutables
-                      boxShadow: [
-                        BoxShadow(
-                          offset: Offset(5, 5),
-                          blurRadius: 10,
-                          color: Color.fromARGB(185, 0, 0, 0),
-                        )
-                      ],
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(50),
-                          topRight: Radius.circular(50))),
-                  child: is_loaded == false
-                      ? Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ListView.builder(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 20, horizontal: 20),
-                                  itemCount: questions.length,
-                                  itemBuilder: (context, index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 20),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              "${index + 1}. ${questions[index]['question']}",
-                                              style: lableStyle,
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Container(
-                                                child: getWidget(
-                                                    questions[index])),
-                                          )
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                            ),
-                            //button
+//       for (var item in questions) {
 
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 30),
-                              child: loading == true
-                                  ? const Center(
-                                      child: CircularProgressIndicator())
-                                  : CustomButton(
-                                      onclickFunction: () {
-                                        bool err = false;
-                                        filePaths.forEach((key, value) {
-                                          if (value == "") {
-                                            err = true;
-                                            EasyLoading.showError(
-                                                'Please add:  "${question_names[key]}"');
+//         print(item);
 
-                                            return alias[key];
-                                          }
-                                        });
+//         if (!["heading", "subheading", "subdropdown-options"]
+//             .contains(item['type']) && item['name'] != null) {
+//           alias[item['alias']] = item['alias'];
+//           question_names[item['alias']] = item['question'];
+//           print("-----------------");
+//           print(item);
 
-                                        if (!err) {
-                                          setState(() {
-                                            loading = true;
-                                          });
-                                          var response =
-                                              HttpService.submitSurvey(context,
-                                                  payloadData, filePaths);
-                                        }
-                                      },
-                                      text: "Submit"),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//           userResponse[item['name']] = "";
+//         }
+//       }
+//     });
+
+//     setState(() {
+//       is_loaded = true;
+//     });
+//   }
+
+//   @override
+//   void initState() {
+//     // TODO: implement initState
+//     super.initState();
+
+//     print("=======================+APP started===================");
+
+//     fetchData();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     var drawerHeader = UserAccountsDrawerHeader(
+//       accountEmail: Text(email.toString()),
+//       currentAccountPicture: CircleAvatar(
+//         backgroundColor: Colors.white,
+//         child: FlutterLogo(size: 42.0),
+//       ),
+//       otherAccountsPictures: <Widget>[],
+//       accountName: null,
+//     );
+
+//     final drawerItems = ListView(
+//       children: <Widget>[
+//         drawerHeader,
+//         ListTile(
+//           title: const Text('Logout'),
+//           onTap: () {
+//             logout(context);
+//           },
+//         ),
+//       ],
+//     );
+//     return SafeArea(
+//       child: Scaffold(
+//         drawer: Drawer(
+//           child: drawerItems,
+//         ),
+//         appBar: AppBar(
+//           title: Text(
+//             "Form",
+//             style: TextStyle(
+//                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+//           ),
+//           backgroundColor: Color.fromARGB(255, 39, 110, 176),
+//           centerTitle: true,
+//           elevation: 0,
+//         ),
+//         body: Container(
+//           color: Color.fromARGB(255, 39, 110, 176),
+//           child: Column(
+//             children: [
+              
+//               //body
+//               Expanded(
+//                 child: Container(
+//                   padding: EdgeInsets.symmetric(
+//                     vertical: 20,
+//                   ),
+//                   decoration: BoxDecoration(
+//                       // ignore: prefer_const_literals_to_create_immutables
+//                       boxShadow: [
+//                         BoxShadow(
+//                           offset: Offset(5, 5),
+//                           blurRadius: 10,
+//                           color: Color.fromARGB(185, 0, 0, 0),
+//                         )
+//                       ],
+//                       color: Colors.white,
+//                       borderRadius: BorderRadius.only(
+//                           topLeft: Radius.circular(50),
+//                           topRight: Radius.circular(50))),
+//                   child: is_loaded == false
+//                       ? Center(
+//                           child: CircularProgressIndicator(),
+//                         )
+//                       : Column(
+//                           mainAxisSize: MainAxisSize.min,
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Expanded(
+//                               child: ListView.builder(
+//                                   padding: EdgeInsets.symmetric(
+//                                       vertical: 20, horizontal: 20),
+//                                   itemCount: questions.length,
+//                                   itemBuilder: (context, index) {
+//                                     return Column(
+//                                       crossAxisAlignment:
+//                                           CrossAxisAlignment.start,
+//                                       children: [
+//                                         Text(
+//                                           "",
+//                                           style: lableStyle,
+//                                         ),
+//                                         Container(
+//                                             child: getWidget(questions[index]))
+//                                       ],
+//                                     );
+//                                   }),
+//                             ),
+//                             //button
+
+//                             Padding(
+//                               padding:
+//                                   const EdgeInsets.symmetric(horizontal: 30),
+//                               child: loading == true
+//                                   ? const Center(
+//                                       child: CircularProgressIndicator())
+//                                   : CustomButton(
+//                                       onclickFunction: () {
+//                                         bool err = false;
+
+//                                         print(userResponse);
+
+//                                         print("-----------------------");
+
+//                                         print(payloadData);
+
+                                      
+//                                         userResponse.forEach((key, value) {
+//                                           if (value == "") {
+//                                             err = true;
+//                                             EasyLoading.showError(
+//                                                 'Please add:  "${key}"');
+
+//                                             return alias[key];
+//                                           }
+//                                         });
+
+//                                         // if (!err) {
+//                                         //   setState(() {
+//                                         //     loading = true;
+//                                         //   });
+//                                         //   var response =
+//                                         //       HttpService.submitSurvey(context,
+//                                         //           payloadData, filePaths);
+//                                         // }
+//                                       },
+//                                       text: "Submit"),
+//                             ),
+//                           ],
+//                         ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
