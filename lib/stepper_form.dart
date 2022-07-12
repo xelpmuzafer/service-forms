@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dropdown/flutter_dropdown.dart';
@@ -10,7 +12,7 @@ import 'package:surveynow/config/appColors.dart';
 import 'package:surveynow/config/textStyles.dart';
 import 'package:surveynow/constants/appStrings.dart';
 import 'package:surveynow/models/questionModel.dart';
-
+import 'package:shared_preferences/shared_preferences.dart'; // rememeber to import shared_preferences: ^0.5.4+8
 import 'package:surveynow/services/http_service.dart';
 import 'package:surveynow/utils/dateFormatter.dart';
 import 'package:surveynow/utils/inputDecorations.dart';
@@ -29,6 +31,8 @@ class FormStepper extends StatefulWidget {
 
 class _FormStepperState extends State<FormStepper> {
   Map<String, TextEditingController> _controllers = {};
+
+  late SharedPreferences prefs;
 
   final pageController = PageController();
   int initialPage = 0;
@@ -70,7 +74,36 @@ class _FormStepperState extends State<FormStepper> {
 
   saveReponse(dynamic ques, dynamic ans) {
     userResponse[ques.name] = ans;
+
+    String encodedMap = json.encode(userResponse);
+
+    prefs.setString('userResponse', encodedMap);
+
     preparePayload();
+  }
+
+  NextPage() {
+    setState(() {
+      initialPage += 1;
+    });
+
+    pageController.jumpToPage(initialPage);
+
+    generatePages();
+  }
+
+  PrevPage() {
+    setState(() {
+      initialPage -= 1;
+    });
+
+    pageController.jumpToPage(initialPage);
+
+    generatePages();
+  }
+
+  SubmitForm() {
+    print(userResponse);
   }
 
   getWidget(DynamicFormField ques) {
@@ -99,26 +132,26 @@ class _FormStepperState extends State<FormStepper> {
               onChanged: (value) {
                 saveReponse(ques, value);
               },
-    keyboardType: TextInputType.multiline,
-    minLines: 1,//Normal textInputField will be displayed
-    maxLines: 5,// when user presses enter it will adapt to it                
-
+              keyboardType: TextInputType.multiline,
+              minLines: 1, //Normal textInputField will be displayed
+              maxLines: 5, // when user presses enter it will adapt to it
+              initialValue: userResponse[ques.name],
               textInputAction: TextInputAction.done,
               maxLength: 6,
               style: h4BlackSemiBold,
               cursorColor: AppColors.kPrimaryColor,
               decoration: InputDecoration(
-                  counterText: "",
-                   labelText: '${ques.name}',
-            hintText: 'Enter ${ques.name}',
-                  labelStyle: h6Black.copyWith(
-                      fontSize: 8, color: AppColors.textBlackThin),
-                  fillColor: AppColors.white,
-                  hintStyle: h5BlackLight.copyWith(color: AppColors.lightGrey),
-                  filled: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                  )),
+                counterText: "",
+                labelText: '${ques.name}',
+                hintText: 'Enter ${ques.name}',
+                labelStyle: h6Black.copyWith(
+                    fontSize: 8, color: AppColors.textBlackThin),
+                fillColor: AppColors.white,
+                hintStyle: h5BlackLight.copyWith(color: AppColors.lightGrey),
+                filled: true,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+              )),
         );
 
       case "date":
@@ -131,23 +164,24 @@ class _FormStepperState extends State<FormStepper> {
               Expanded(
                 child: IgnorePointer(
                   child: TextFormField(
-                    controller: _controllers[ques.name!],
+                    
+                    controller: _controllers[ques.name],
                     inputFormatters: [DateTextFormatter()],
                     style: h4BlackSemiBold,
                     cursorColor: AppColors.kPrimaryColor,
                     decoration: InputDecoration(
                       hintText: ques.name,
                       labelStyle: h6Black.copyWith(
-                      fontSize: 8, color: AppColors.textBlackThin),
-                  fillColor: AppColors.white,
-                  hintStyle: h5BlackLight.copyWith(color: AppColors.lightGrey),
-                  filled: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                        ),
+                          fontSize: 8, color: AppColors.textBlackThin),
+                      fillColor: AppColors.white,
+                      hintStyle:
+                          h5BlackLight.copyWith(color: AppColors.lightGrey),
+                      filled: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                    ),
                     validator: (val) => Validations.commonValidate(
                         value: val, title: ques.name),
-
                   ),
                 ),
               ),
@@ -161,34 +195,21 @@ class _FormStepperState extends State<FormStepper> {
           ),
         );
 
-        return Container(
-            child: TextField(
-          onChanged: (value) {
-            saveReponse(ques, value);
-          },
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: '${ques.name}',
-            hintText: 'Enter ${ques.name}',
-          ),
-          autofocus: false,
-        ));
-
       case "number":
         return Container(
-          child: TextField(
+          child: TextFormField(
+            initialValue: userResponse[ques.name],
             onChanged: (value) {
               saveReponse(ques, value);
             },
             decoration: InputDecoration(
               hintText: 'Enter ${ques.name}',
-              labelStyle: h6Black.copyWith(
-                      fontSize: 8, color: AppColors.textBlackThin),
-                  fillColor: AppColors.white,
-                  hintStyle: h5BlackLight.copyWith(color: AppColors.lightGrey),
-                  filled: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+              labelStyle:
+                  h6Black.copyWith(fontSize: 8, color: AppColors.textBlackThin),
+              fillColor: AppColors.white,
+              hintStyle: h5BlackLight.copyWith(color: AppColors.lightGrey),
+              filled: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
             ),
             autofocus: false,
             keyboardType: TextInputType.number,
@@ -202,43 +223,35 @@ class _FormStepperState extends State<FormStepper> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ques.name!),
+                  Text(
+                    ques.name!,
+                    style:
+                        TextStyle(fontSize: 8, color: AppColors.textBlackThin),
+                  ),
                   DropDown(
+                      initialValue: userResponse[ques.name],
                       isExpanded: true,
                       items: ques.options!,
-                      hint: Text(ques.options!.length > 0
-                          ? ques.options![0].toString()
-                          : ""),
+                      hint: Text(
+                        ques.options!.length > 0
+                            ? ques.options![0].toString()
+                            : "",
+                        style: TextStyle(
+                            fontSize: 8, color: AppColors.textBlackThin),
+                      ),
                       icon: Icon(
                         Icons.expand_more,
                         color: Colors.blue,
                       ),
                       onChanged: (newValue) {
                         setState(() {
-                          userResponse[ques.name] = newValue!;
                           saveReponse(ques, newValue);
                         });
                       }),
                 ],
               );
 
-      case "subdropdown-options1":
-        return DropDown(
-            isExpanded: true,
-            items: ques.options!,
-            hint: Text(ques.options![0]),
-            icon: Icon(
-              Icons.expand_more,
-              color: Colors.blue,
-            ),
-            onChanged: (newValue) {
-              setState(() {
-                userResponse[ques.name] = newValue!;
-                saveReponse(ques, newValue);
-              });
-            });
-
-      case "sub-dropdown-value":
+           case "sub-dropdown-value":
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -253,7 +266,7 @@ class _FormStepperState extends State<FormStepper> {
                 ),
                 onChanged: (newValue) {
                   setState(() {
-                    userResponse[ques.name] = newValue!;
+                    // userResponse[ques.name] = newValue!;
                     saveReponse(ques, newValue);
                   });
                 }),
@@ -261,21 +274,7 @@ class _FormStepperState extends State<FormStepper> {
         );
 
       case "sub-dropdown-parent":
-        userResponse[ques.name] = ques.options![0];
-
-        // for(var x in questions){
-        //   if(x['type'] == 'subdropdown-options' && x['name'] == ques['options'][0]){
-        //         setState(() {
-        //           child_options = x['options'];
-        //         });
-        //   }
-        // }
-
-        dynamic p_options = ques.options!;
-
-        p_options.insert(0, "");
-
-        return Column(
+               return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -286,8 +285,9 @@ class _FormStepperState extends State<FormStepper> {
             SizedBox(
               width: double.infinity,
               child: DropDown(
+                  initialValue: userResponse[ques.name],
                   isExpanded: true,
-                  items: p_options,
+                  items: ques.options!,
                   hint: Text(ques.options![0]),
                   icon: Icon(
                     Icons.expand_more,
@@ -295,7 +295,8 @@ class _FormStepperState extends State<FormStepper> {
                   ),
                   onChanged: (newValue) {
                     setState(() {
-                      userResponse[ques.name] = newValue!;
+                      saveReponse(ques, newValue);
+
                       child_options.clear();
                     });
 
@@ -334,69 +335,33 @@ class _FormStepperState extends State<FormStepper> {
     }
   }
 
-  late Map pages1;
+  late Map page_list;
   List<Widget> pages_All = [];
   fetchData() async {
-    print("called");
-    List<dynamic> json = await HttpService().getForm("4dd83ec9-a32b-4ef2-a0ca-52296652419b");
+    SharedPreferences.getInstance().then((value) {
+      setState(() {
+        prefs = value;
+      });
+
+      print("decoding");
+
+      var filledResponses = prefs.getString("userResponse");
+      if (filledResponses != "" && filledResponses != null) {
+        Map<String, dynamic> decodedMap = json.decode(filledResponses);
+
+        print(decodedMap);
+
+        setState(() {
+          userResponse = decodedMap;
+        });
+      }
+    });
+    List<dynamic> jsondata = await HttpService().getForm(widget.id.toString());
 
     setState(() {
-      questions = json;
-
-      pages1 = groupBy(questions, (dynamic obj) => obj.page);
-
-      print("-----------------res-----------------------");
-      print(pages1[1][0].name);
-
-
-      print(pages1.keys.toList());
-
-      
-      for(var key in pages1.keys.toList()) {
-        List<Widget> widgets = [];
-
-        var element = pages1[key];
-        element.forEach(( ques) {
-          print(ques.type);
-          try {
-            if (["text", "date", "number"].contains(ques.type)) {
-              _controllers[ques.name!] = TextEditingController();
-            }
-
-            var w = getWidget(ques);
-
-            widgets.add(Padding(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              child: w!,
-            ));
-          } catch (e) {
-            print(
-                "---------------------------------------ERROE-------------------------OCCORED----------------");
-            print(ques.name);
-            print(e);
-          }
-        });
-        pages_All.add(ListView(
-          children: widgets,
-        ));
-      };
-
-      print(
-          "==============================GENERATED PAGES========================");
-      print(pages_All);
-
-      // for (var item in questions) {
-
-      //   if (!["heading", "subheading", "subdropdown-options"]
-      //       .contains(item['type']) && item['name'] != null) {
-      //     alias[item['alias']] = item['alias'];
-      //     question_names[item['alias']] = item['question'];
-      //     print("-----------------");
-      //     print(item);
-
-      //     userResponse[item['name']] = "";
-      //   }
-      // }
+      questions = jsondata;
+      page_list = groupBy(questions, (dynamic obj) => obj.page);
+      generatePages();
     });
 
     setState(() {
@@ -404,37 +369,63 @@ class _FormStepperState extends State<FormStepper> {
     });
   }
 
+  generatePages() async {
+    pages_All = [];
+    for (var key in page_list.keys.toList()) {
+      List<Widget> widgets = [];
+
+      var element = page_list[key];
+      element.forEach((ques) {
+        
+        try {
+          if (["text", "date", "number"].contains(ques.type)) {
+            _controllers[ques.name!] = TextEditingController();
+            if(ques.type == "date"){
+
+              if(userResponse.keys.contains(ques.name!)){
+                _controllers[ques.name!]!.text = userResponse[ques.name];
+              }
+                 
+            }
+          }
+
+          var w = getWidget(ques);
+
+          widgets.add(Padding(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            child: w!,
+          ));
+        } catch (e) {
+          print(e);
+        }
+      });
+      pages_All.add(ListView(
+        children: widgets,
+      ));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     fetchData();
-
-    // pageController.jumpToPage(initialPage);
-
-    // WidgetsBinding.instance.addPostFrameCallback(
-    //   (timeStamp) {
-    //     Timer.periodic(
-    //       const Duration(milliseconds: 1500),
-    //       (_) {
-
-    //         print("========================$timeStamp==============================");
-    //         if (mounted) {
-    //           initialPage += 1;
-    //           if (initialPage == STEPS - 1) {
-    //           } else {
-    //             print("-------------JUMP-----------------");
-    //           }
-    //         }
-    //       },
-    //     );
-    //   },
-    // );
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          title: Text("Service Forms"),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  prefs.setString("userResponse", "");
+                  fetchData();
+                },
+                icon: Icon(Icons.refresh))
+          ],
+        ),
         body: Container(
           color: Colors.white,
           child: pages_All.length == 0
@@ -454,34 +445,33 @@ class _FormStepperState extends State<FormStepper> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                initialPage = initialPage - 1;
-                              });
-
-                                pageController.jumpToPage(initialPage);
-
-                              // stepperController.jumpTo(initialPage.toDouble());
-
-                              print(pageController.page);
-                            },
-                            child: Text("Back")),
-
-                          
-                        ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                initialPage += 1;
-                              });
-
-                                pageController.jumpToPage(initialPage);
-                              print(child_options);
-
-                              print(pageController.page);
-                              // stepperController.jumpTo(initialPage.toDouble());
-                            },
-                            child: Text("Next"))
+                        Expanded(
+                          flex: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18.0),
+                            child: ElevatedButton(
+                                onPressed: initialPage == 0 ? null : PrevPage,
+                                child: Text("Back")),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18.0),
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  primary: initialPage == page_list.keys.length
+                                      ? Colors.green
+                                      : Colors.blue,
+                                ),
+                                onPressed: initialPage == page_list.keys.length
+                                    ? SubmitForm
+                                    : NextPage,
+                                child: Text(initialPage == page_list.keys.length
+                                    ? "Submit"
+                                    : "Next")),
+                          ),
+                        )
                       ],
                     ),
                     SizedBox(
@@ -517,6 +507,7 @@ class _FormStepperState extends State<FormStepper> {
   Future<dynamic> selectDate(BuildContext context, ques) async {
     final DateTime? picked = await showDatePicker(
       context: context,
+      
       initialDate: DateTime.now().subtract(Duration(days: 1)),
       firstDate: DateTime(1900),
       lastDate: DateTime.now().subtract(Duration(days: 1)),
@@ -542,6 +533,7 @@ class _FormStepperState extends State<FormStepper> {
       setState(() {
         var selectedDate = DateFormat("dd-MM-yyyy").format(picked);
         _controllers[ques.name!]!.text = selectedDate;
+        saveReponse(ques, selectedDate);
       });
     }
   }
