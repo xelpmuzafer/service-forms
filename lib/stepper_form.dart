@@ -164,7 +164,6 @@ class _FormStepperState extends State<FormStepper> {
               Expanded(
                 child: IgnorePointer(
                   child: TextFormField(
-                    
                     controller: _controllers[ques.name],
                     inputFormatters: [DateTextFormatter()],
                     style: h4BlackSemiBold,
@@ -251,30 +250,44 @@ class _FormStepperState extends State<FormStepper> {
                 ],
               );
 
-           case "sub-dropdown-value":
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(ques.name!),
-            DropDown(
-                isExpanded: true,
-                items: child_options,
-                hint: Text(ques.name!),
-                icon: Icon(
-                  Icons.expand_more,
-                  color: Colors.blue,
-                ),
-                onChanged: (newValue) {
-                  setState(() {
-                    // userResponse[ques.name] = newValue!;
-                    saveReponse(ques, newValue);
-                  });
-                }),
-          ],
-        );
+      case "subdropdown-value":
+        return child_options.length == 0
+            ? null
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(ques.name!),
+                  DropdownButton(
+                    icon: Icon(
+                      Icons.expand_more,
+                      color: Colors.blue,
+                    ),
+                    isExpanded: true,
+                    value: userResponse[ques.name]  != null ?  
+                            child_options.contains(userResponse[ques.name]) ?  userResponse[ques.name] : child_options[0]: child_options[0] ,
+                    isDense: true,
+                    onChanged: (newValue) {
+                      setState(() {
+                        // userResponse[ques.name] = newValue!;
+                        saveReponse(ques, newValue);
+                        print(child_options);
+                        print(userResponse[ques.name]);
+                        
+
+                      });
+                    },
+                    items: child_options.map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text(value.toString()),
+                      );
+                    }).toList(),
+                  )
+                ],
+              );
 
       case "sub-dropdown-parent":
-               return Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -300,6 +313,8 @@ class _FormStepperState extends State<FormStepper> {
                       child_options.clear();
                     });
 
+                    generatePages();
+
                     print("----------------changed-----------------------");
 
                     late dynamic selected_parent_value;
@@ -324,10 +339,15 @@ class _FormStepperState extends State<FormStepper> {
                         setState(() {
                           child_options = temp;
                         });
+
+                        prefs.setString(
+                            "child_options", json.encode(child_options));
                       }
                     }
 
                     print(child_options);
+
+                    generatePages();
                   }),
             ),
           ],
@@ -355,6 +375,16 @@ class _FormStepperState extends State<FormStepper> {
           userResponse = decodedMap;
         });
       }
+
+      // var options = prefs.getString("child_options");
+      
+      // if (options != null) {
+      //   setState(() {
+      //     child_options = json.decode(options);
+
+      //     print(child_options);
+      //   });
+      // }
     });
     List<dynamic> jsondata = await HttpService().getForm(widget.id.toString());
 
@@ -376,16 +406,13 @@ class _FormStepperState extends State<FormStepper> {
 
       var element = page_list[key];
       element.forEach((ques) {
-        
         try {
           if (["text", "date", "number"].contains(ques.type)) {
             _controllers[ques.name!] = TextEditingController();
-            if(ques.type == "date"){
-
-              if(userResponse.keys.contains(ques.name!)){
+            if (ques.type == "date") {
+              if (userResponse.keys.contains(ques.name!)) {
                 _controllers[ques.name!]!.text = userResponse[ques.name];
               }
-                 
             }
           }
 
@@ -507,7 +534,6 @@ class _FormStepperState extends State<FormStepper> {
   Future<dynamic> selectDate(BuildContext context, ques) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      
       initialDate: DateTime.now().subtract(Duration(days: 1)),
       firstDate: DateTime(1900),
       lastDate: DateTime.now().subtract(Duration(days: 1)),
