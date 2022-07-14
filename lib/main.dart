@@ -1,15 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:surveynow/chatbot.dart';
-import 'package:surveynow/formScreen.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:surveynow/services/my_shared_preferrences.dart';
 import 'package:http/http.dart' as http;
 import 'package:surveynow/stepper_form.dart';
 
 void main() {
-  
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const MyApp());
@@ -41,37 +37,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  dynamic data = [];
-
-Future<dynamic> getRequest() async {
-    //replace your restFull API here.
-    String url = "http://49.50.74.106:3001/services/data/getAllServices";
-    final response = await http.get(Uri.parse(url));
-  
-    var responseData = json.decode(response.body);
-  
-    
-    setState(() {
-      data = responseData['data'];
-      print(data);
-    });
-    return responseData;
-  }
-
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
-       getRequest();
-      }
-    
-  
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FormStepper(id: "ca2e3e6c-3bc4-49ec-91c1-c38307386224",);
+    return FormStepper(
+      id: "ca2e3e6c-3bc4-49ec-91c1-c38307386224",
+    );
   }
 }
