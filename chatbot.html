@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+
+    <div id="chat">
+
+        <br><br>
+
+    </div>
+    <!-- <input id="text">
+    <button onclick="sendMessage()">Send</button> -->
+    
+    <script>
+
+        var data = [
+            {  "id" : 1 ,  "parent_id" : "root",  "message" : "welcome to mitaan, are you looking for service?" },
+            {  "id" : 2 ,  "parent_id" : 1,  "message" : "Yes" },
+            {  "id" : 3 ,  "parent_id" : 1,  "message" : "No" },
+            {  "id" : 4 ,  "parent_id" : 2,  "message" : "Birth Certificate" },
+            {  "id" : 5 ,  "parent_id" : 2,  "message" : "Marriage Certificate" },
+            {  "id" : 5 ,  "parent_id" : 2,  "message" : "Sc / St" },
+            {  "id" : 6 ,  "parent_id" : 3,  "message" : "How can i help you?" },
+            {  "id" : 7 ,  "parent_id" : 4,  "message" : "Birth Certificate within 30 days of Birth in Home" },
+            {  "id" : 8 ,  "parent_id" : 4,  "message" : "Birth Certificate within 31 to 1 Year Birth in Home" },
+            {  "id" : 9 ,  "parent_id" : 4,  "message" : "Birth Certificate within 30 days of Birth in Hospital" },
+            {  "id" : 10 ,  "parent_id" : 4,  "message" : "Birth Certificate within 31 to 1 Year Birth in Hospital" },
+        
+        ]
+
+
+        function chatBot(parent_id){
+             
+           let temp = [];
+
+           data.forEach((item) => {
+            if(item.parent_id == parent_id)
+               temp.push(item)
+           })
+
+           return temp;
+
+        }
+      var x = chatBot(1);
+        res.send(x)
+
+
+
+    </script>
+</body>
+</html>
